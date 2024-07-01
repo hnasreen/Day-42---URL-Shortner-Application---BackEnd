@@ -1,25 +1,40 @@
 // middlewares/authMiddleware.js
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const {configDotenv} = require('dotenv')
+configDotenv();
 
-const authMiddleware = async (req, res, next) => {
-  const token = req.header('Authorization')?.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ message: 'No token, authorization denied' });
-  }
+const authMiddleware = async (request, response, next) => {
+  console.log("All Cookies: ", request.cookies); 
+  const token = request.cookies.jwt;
+  console.log(token)
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await User.findById(decoded.userId);
-    if (!req.user) {
-      return res.status(401).json({ message: 'User not found, authorization denied' });
-    }
-    next();
-  } catch (error) {
-    console.error(error);
-    res.status(401).json({ message: 'Token is not valid' });
+
+  if (!token) {
+      return response.status(401).json({ message: 'Unauthorized' });
   }
+
+      const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+
+      const user = await User.findById(decodedToken.id);
+
+      // const user = await User.findOne({
+      //     email:decodedToken.email
+      // })
+      console.log(user)
+      if(!user){
+          return response.status(401).json({message:"Invalid Token. User not found"})
+      }
+
+      request.user = user
+
+      next();
+  
+} catch (error) {
+  console.log("Error:",error)
+  response.status(500).json({ message: "Invalid Token"});
+}
 };
 
 module.exports = authMiddleware;

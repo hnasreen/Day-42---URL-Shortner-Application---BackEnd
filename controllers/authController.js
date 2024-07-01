@@ -110,7 +110,18 @@ exports.login = async (req, res) => {
     }
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-    res.status(200).json({ token, userId: user._id });
+    // res.status(200).json({ token, userId: user._id });
+
+    const cookieOptions = {
+      httpOnly: true,
+      sameSite: "none",
+      secure:true,
+      maxAge:  24 * 60 * 60 * 1000, // 24 hours from now
+      // domain:"localhost"
+  };
+  // console.log(`userresetTokenLogin ${user.resetToken}`)
+  response.status(200).cookie('jwt', token, cookieOptions).json({ message: 'User login successful.',userId: user._id} );
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
@@ -129,8 +140,8 @@ exports.forgotPassword = async (req, res) => {
     }
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    user.resetToken = token;
-    user.resetTokenExpiry = Date.now() + 3600000; // 1 hour
+    // user.resetToken = token;
+    // user.resetTokenExpiry = Date.now() + 3600000; // 1 hour
     await user.save();
 
     const transporter = nodemailer.createTransport({
@@ -167,25 +178,17 @@ exports.forgotPassword = async (req, res) => {
 
 // Reset Password
 exports.resetPassword = async (req, res) => {
-  const { token } = req.params;
-  const { newPassword } = req.body;
+    const token = req.headers.authorization.split(' ')[1];
+    // const token = req.cookies.jwt;
+    const { password } = req.body;
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const passwordHash = await bcrypt.hash(password, 10);
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findOne({ _id: decoded.userId, resetToken: token, resetTokenExpiry: { $gt: Date.now() } });
-
-    if (!user) {
-      return res.status(400).json({ message: 'Invalid or expired reset token' });
+        await User.findByIdAndUpdate(decoded.id, { password: passwordHash });
+        res.json({ success: true, message: 'Password updated successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error updating password' });
+        console.log(error)
     }
-
-    user.password = await bcrypt.hash(newPassword, 10);
-    user.resetToken = undefined;
-    user.resetTokenExpiry = undefined;
-    await user.save();
-
-    res.status(200).json({ message: 'Password reset successful' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
 };
