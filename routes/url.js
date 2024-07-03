@@ -5,9 +5,9 @@ const router = express.Router();
 const authMiddleware = require('../middlewares/authMiddleware')
 
 router.post('/shorten', authMiddleware,shortenUrl);
-router.get('/stats', authMiddleware,getUrlStats);
+router.post('/stats', authMiddleware,getUrlStats);
 router.get('/:shortUrl',authMiddleware, redirectUrl);
-router.get('/count/daily', authMiddleware,getDailyUrlCount);
-router.get('/count/monthly', authMiddleware,getMonthlyUrlCount);
+router.post('/count/daily', authMiddleware,getDailyUrlCount);
+router.post('/count/monthly', authMiddleware,getMonthlyUrlCount);
 
 module.exports = router;

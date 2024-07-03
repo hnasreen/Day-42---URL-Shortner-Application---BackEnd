@@ -5,36 +5,37 @@ const {configDotenv} = require('dotenv')
 configDotenv();
 
 const authMiddleware = async (request, response, next) => {
-  console.log("All Cookies: ", request.cookies); 
-  const token = request.cookies.jwt;
+  // console.log("data",request.body)
+  // console.log("All Cookies: ", request.body.header); 
+  const token = request.body.header.authtoken;
   console.log(token)
 
-  try {
+//   try {
 
-  if (!token) {
-      return response.status(401).json({ message: 'Unauthorized' });
-  }
+//   if (!token) {
+//       return response.status(401).json({ message: 'Unauthorized' });
+//   }
 
-      const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+//       const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
 
-      const user = await User.findById(decodedToken.id);
+//       const user = await User.findById(decodedToken.id);
 
-      // const user = await User.findOne({
-      //     email:decodedToken.email
-      // })
-      console.log(user)
-      if(!user){
-          return response.status(401).json({message:"Invalid Token. User not found"})
-      }
+//       // const user = await User.findOne({
+//       //     email:decodedToken.email
+//       // })
+//       console.log(user)
+//       if(!user){
+//           return response.status(401).json({message:"Invalid Token. User not found"})
+//       }
 
-      request.user = user
+//       request.user = user
 
-      next();
+//       next();
   
-} catch (error) {
-  console.log("Error:",error)
-  response.status(500).json({ message: "Invalid Token"});
-}
+// } catch (error) {
+//   console.log("Error:",error)
+//   response.status(500).json({ message: "Invalid Token"});
+// }
 };
 
 module.exports = authMiddleware;

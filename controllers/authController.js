@@ -1,5 +1,5 @@
 // controllers/authController.js
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const User = require('../models/User');
@@ -105,22 +105,26 @@ exports.login = async (req, res) => {
   try {
     const user = await User.findOne({ email });
 
-    if (!user || !user.isActive || !(await bcrypt.compare(password, user.password))) {
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+
+    if (!user || !user.isActive || !isPasswordCorrect) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
     // res.status(200).json({ token, userId: user._id });
 
-    const cookieOptions = {
-      httpOnly: true,
-      sameSite: "none",
-      secure:true,
-      maxAge:  24 * 60 * 60 * 1000, // 24 hours from now
-      // domain:"localhost"
-  };
+    await user.save();
+
+  //   const cookieOptions = {
+  //     httpOnly: true,
+  //     // sameSite: "none",
+  //     // secure:true,
+  //     maxAge:  24 * 60 * 60 * 1000, // 24 hours from now
+  //     // domain:"localhost"
+  // };
   // console.log(`userresetTokenLogin ${user.resetToken}`)
-  response.status(200).cookie('jwt', token, cookieOptions).json({ message: 'User login successful.',userId: user._id} );
+  res.status(200).json({ message: 'User login successful.',userId: user._id, jwt:token} );
 
   } catch (error) {
     console.error(error);
@@ -157,7 +161,7 @@ exports.forgotPassword = async (req, res) => {
       to: email,
       subject: 'Password Reset Link',
       html: `<h2>Please click on the given link to reset your password</h2>
-             <a href="${process.env.CLIENT_URL}/reset-password/${token}">Reset Password</a>`
+             <a href="${process.env.CLIENT_URL}/reset-password/${user._id}/${token}">Reset Password</a>`
     };
 
     transporter.sendMail(mailOptions, function (error, info) {
