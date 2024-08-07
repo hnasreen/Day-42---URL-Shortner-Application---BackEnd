@@ -21,6 +21,7 @@ exports.shortenUrl = async (req, res) => {
 // Redirect to Long URL
 exports.redirectUrl = async (req, res) => {
   const { shortUrl } = req.params;
+  console.log("ShortUrl:",shortUrl)
 
   try {
     const url = await Url.findOne({ shortUrl });
@@ -33,8 +34,8 @@ exports.redirectUrl = async (req, res) => {
     await url.save();
 
     // res.status(200).redirect(url.longUrl);
-    console.log(url)
-    res.redirect(url.longUrl);
+    console.log("url:",url.longUrl)
+    return res.status(200).redirect(url.longUrl);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });

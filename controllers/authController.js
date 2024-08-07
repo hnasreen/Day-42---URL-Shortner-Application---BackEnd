@@ -36,7 +36,7 @@ exports.register = async (req, res) => {
 
     await user.save();
 
-    console.log('JWT token generated:', token); // Log JWT token
+    // console.log('JWT token generated:', token); // Log JWT token
 
     const transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -111,20 +111,25 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-    // res.status(200).json({ token, userId: user._id });
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' })
+
+    console.log(token)
 
     await user.save();
 
-  //   const cookieOptions = {
-  //     httpOnly: true,
-  //     // sameSite: "none",
-  //     // secure:true,
-  //     maxAge:  24 * 60 * 60 * 1000, // 24 hours from now
-  //     // domain:"localhost"
-  // };
-  // console.log(`userresetTokenLogin ${user.resetToken}`)
-  res.status(200).json({ message: 'User login successful.',userId: user._id, jwt:token} );
+    // const cookieOptions = {
+    //   expires: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+    //   httpOnly: true,
+    //   domain:"localhost"
+    //   // secure: true, // enable it when your development in production
+    //   // sameSite: "none", // enable it when your development in production
+    // };
+
+    // return res.cookie("token",token,cookieOptions).json({message:"user login successfull"})
+
+    res.status(200).json({ message: 'User login successful.',userId: user._id, jwt:token} );
+
+
 
   } catch (error) {
     console.error(error);
