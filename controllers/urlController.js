@@ -34,8 +34,17 @@ exports.redirectUrl = async (req, res) => {
     await url.save();
 
     // res.status(200).redirect(url.longUrl);
-    console.log("url:",url.longUrl)
-    return res.status(200).redirect(url.longUrl);
+    // console.log("url:",url.longUrl)
+    // return res.status(200).redirect(url.longUrl);
+
+    try{
+      new URL(url.longUrl)
+      res.status(200).json(url.longUrl)
+    }
+    catch(error){
+  
+      res.status(400).json({message:"Invalid long url"})
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
